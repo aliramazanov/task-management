@@ -2,18 +2,23 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserEntity } from './user.entitiy';
-import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
+import { JwtPayload } from './definition/jwt-payload.interface';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import { UserEntity } from './user.entitiy';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    private jwtService: JwtService,
   ) {}
 
   async createUser(authCredentialsDto: AuthCredentialsDto): Promise<void> {
@@ -31,6 +36,31 @@ export class AuthService {
       } else {
         throw new InternalServerErrorException();
       }
+    }
+  }
+
+  async signIn(
+    authCredentialsDto: AuthCredentialsDto,
+  ): Promise<{ token: string }> {
+    const { username, password } = authCredentialsDto;
+
+    try {
+      const user = await this.userRepository.findOneOrFail({
+        where: { username },
+      });
+
+      const passwordMatch = await bcrypt.compare(password, user.securePassword);
+
+      if (passwordMatch) {
+        const payload: JwtPayload = { username };
+        const token = this.jwtService.sign(payload);
+
+        return { token };
+      } else {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+    } catch (error) {
+      throw new NotFoundException('User not found or invalid credentials');
     }
   }
 }
