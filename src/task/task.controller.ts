@@ -3,24 +3,26 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { UserEntity } from 'src/auth/user.entitiy';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { TaskEntity } from './task.entity';
-import { TaskService } from './task.service';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
-import { AuthGuard } from '@nestjs/passport';
-import { UserEntity } from 'src/auth/user.entitiy';
-import { GetUser } from 'src/auth/get-user.decorator';
+import { TaskEntity } from './task.entity';
+import { TaskService } from './task.service';
 
 @Controller('task')
 @UseGuards(AuthGuard())
 export class TaskController {
+  private logger = new Logger('TaskController');
   constructor(private taskService: TaskService) {}
 
   @Get()
@@ -28,6 +30,8 @@ export class TaskController {
     @Query() filterDto: GetTasksFilterDto,
     @GetUser() user: UserEntity,
   ): Promise<TaskEntity[]> {
+    const getTasksLog = `User: ${user.username} retrieving all tasks. Filters: ${JSON.stringify(filterDto)}`;
+    this.logger.verbose(getTasksLog);
     return this.taskService.getTasks(filterDto, user);
   }
 
@@ -44,6 +48,8 @@ export class TaskController {
     @Body() createTaskDto: CreateTaskDto,
     @GetUser() user: UserEntity,
   ): Promise<TaskEntity> {
+    const createTasksLog = `User: ${user.username} retrieving all tasks. Data: ${JSON.stringify(createTaskDto)}`;
+    this.logger.verbose(createTasksLog);
     return this.taskService.createTask(createTaskDto, user);
   }
 

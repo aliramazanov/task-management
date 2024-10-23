@@ -9,7 +9,7 @@
 ## Overview
 
 - This is a Task Management Application built using the Nest.js framework.
-- The application includes CRUD operations and standard authorization and authentication practices.
+- The application includes CRUD operations and standard authentication & authorization practices.
 
 ## Features
 
