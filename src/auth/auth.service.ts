@@ -44,23 +44,21 @@ export class AuthService {
   ): Promise<{ token: string }> {
     const { username, password } = authCredentialsDto;
 
-    try {
-      const user = await this.userRepository.findOneOrFail({
-        where: { username },
-      });
+    const user = await this.userRepository.findOne({ where: { username } });
 
-      const passwordMatch = await bcrypt.compare(password, user.securePassword);
-
-      if (passwordMatch) {
-        const payload: JwtPayload = { username };
-        const token = this.jwtService.sign(payload);
-
-        return { token };
-      } else {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-    } catch (error) {
-      throw new NotFoundException('User not found or invalid credentials');
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+
+    const passwordMatch = await bcrypt.compare(password, user.securePassword);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload: JwtPayload = { username };
+    const token = this.jwtService.sign(payload);
+
+    return { token };
   }
 }
