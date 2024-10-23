@@ -23,8 +23,9 @@
 - Nest.js
 - TypeScript
 - PostgreSQL
-- JWT for authentication
-- Postman collection included for testing
+- JWT for Auth
+- Tested with Jest
+- Postman collection included
 
 ## Course Credit
 
